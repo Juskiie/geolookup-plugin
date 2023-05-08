@@ -1,0 +1,4 @@
+name: untitled1
+version: '${project.version}'
+main: hoosk.untitled1.Untitled1
+api-version: 1.19
