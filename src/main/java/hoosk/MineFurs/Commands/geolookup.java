@@ -93,7 +93,7 @@ public class geolookup implements Listener, CommandExecutor {
      */
     public void getIPInfo(String addr, CommandSender sender, Player plr) {
         IPinfo ipInfo = new IPinfo.Builder()
-                .setToken("---PUT TOKEN HERE---") // TODO
+                .setToken("---PUT TOKEN HERE---")
                 .build();
         try {
             IPResponse response = ipInfo.lookupIP(addr);
