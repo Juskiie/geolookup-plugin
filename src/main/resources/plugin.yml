@@ -1,4 +1,11 @@
 name: untitled1
 version: '${project.version}'
-main: hoosk.untitled1.Untitled1
+main: hoosk.MineFurs.Main
 api-version: 1.19
+commands:
+  geolookup:
+    description: Gets player connection information and region
+    usage: /geolookup
+    aliases: /geo
+    permission: geolookup
+    permission-message: Sorry, you don't have permission to use this command.
