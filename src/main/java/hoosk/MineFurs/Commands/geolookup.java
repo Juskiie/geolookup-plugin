@@ -16,9 +16,12 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import static org.bukkit.Bukkit.getLogger;
 
@@ -115,37 +118,26 @@ public class geolookup implements Listener, CommandExecutor {
      * @param sender - Caller of the /geolookup command
      * @param plr - The target player
      */
-    public void getIPInfo(String addr, CommandSender sender, Player plr) {
+    public void getIPInfo(String addr, @NotNull CommandSender sender, @NotNull Player plr) {
         IPinfo ipInfo = new IPinfo.Builder()
                 .setToken("---PUT TOKEN HERE---")
                 .build();
         try {
             IPResponse response = ipInfo.lookupIP(addr);
-            if (response.getCountryName() != null) {
-                String ipinfo = String.format("[%s]", plr.getName())
-                        + "[" + addr + "] "
-                        + "has connected from: "
-                        + String.format("[%s] ", response.getCountryCode())
-                        + response.getCountryName()
-                        + "-"
-                        + response.getRegion();
-                sender.sendMessage(ipinfo);
-                if(fileLogging) {
-                    logToFile(ipinfo);
-                }
-            } else {
-                String ipinfo = String.format("[%s]", plr.getName())
-                        + " has connected from: "
-                        + String.format("[%s] ", response.getCountryCode())
-                        + response.getRegion();
-                sender.sendMessage(ipinfo);
-                if(fileLogging) {
-                    logToFile(ipinfo);
-                }
+            String country = response.getCountryName() != null ? response.getCountryName() : response.getRegion();
+            String ipinfo = String.format(
+                    "[%s] %s has connected from: [%s] %s",
+                    LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME), // YYYY-MM-DD-Time
+                    plr.getName(),
+                    response.getCountryCode(),
+                    country);
+            sender.sendMessage(ipinfo);
+            if(fileLogging) {
+                logToFile(ipinfo);
             }
         } catch (RateLimitedException e) {
             getLogger().warning("ipinfo.io rate limit has been reached!.. How did you use 50k requests in a month??");
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
 
@@ -157,8 +149,11 @@ public class geolookup implements Listener, CommandExecutor {
      * @param connectionInfo The string you want to write to the log file.
      */
     private void logToFile(String connectionInfo) {
-        // LOGFILE
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter("geolookup.log"))) {
+        File logDir = new File("plugin logs");
+        if(!logDir.exists()) {
+            logDir.mkdir();
+        }
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File(logDir, "geolookup.log"), true))) {
             writer.write(connectionInfo);
             writer.newLine();
         } catch (IOException e) {
