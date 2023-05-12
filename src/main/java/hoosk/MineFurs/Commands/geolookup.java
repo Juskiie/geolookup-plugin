@@ -15,11 +15,18 @@ import io.ipinfo.api.model.IPResponse;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
+
+import static org.bukkit.Bukkit.getLogger;
 
 public class geolookup implements Listener, CommandExecutor {
     private static final String PERMISSION_NODE_TOGGLE = "geolookup.active";
     private static final String PERMISSION_NODE_USE = "geolookup.use";
+    private static final String PERMISSION_NODE_LOGGING = "geolookup.logger";
+    private boolean fileLogging;
     private Set<UUID> playersWithGeoLookupEnabled = new HashSet<>();
 
     public geolookup(Main plugin) {
@@ -49,40 +56,57 @@ public class geolookup implements Listener, CommandExecutor {
             return false;
         }
 
-        if(args.length == 0) {
-            sender.sendMessage("Command usage: /geolookup {<player> | * | active} <options>");
-            return true;
-        } else if (args.length == 2 && args[0].equalsIgnoreCase("active") && sender.hasPermission(PERMISSION_NODE_TOGGLE)){
-            if(args[1].equalsIgnoreCase("true")){
-                playersWithGeoLookupEnabled.add(((Player) sender).getUniqueId());
-                sender.sendMessage("Geolocation auto-lookup enabled!");
-            } else if (args[1].equalsIgnoreCase("false")) {
-                playersWithGeoLookupEnabled.remove(((Player) sender).getUniqueId());
-                sender.sendMessage("Geolocation auto-lookup disabled.");
-            } else {
-                sender.sendMessage("Invalid argument. Usage: /geolookup active [true|false]");
+        String geoCommand = args[0].toLowerCase();
+
+        switch (geoCommand) {
+            case "active" -> {
+                if (args.length != 2 || !sender.hasPermission(PERMISSION_NODE_TOGGLE)) {
+                    break;
+                }
+                if (args[1].equalsIgnoreCase("true")) {
+                    playersWithGeoLookupEnabled.add(((Player) sender).getUniqueId());
+                    sender.sendMessage("Geolocation auto-lookup enabled!");
+                } else if (args[1].equalsIgnoreCase("false")) {
+                    playersWithGeoLookupEnabled.remove(((Player) sender).getUniqueId());
+                    sender.sendMessage("Geolocation auto-lookup disabled.");
+                } else {
+                    sender.sendMessage("Invalid argument. Usage: /geolookup active [true|false]");
+                }
+                return true;
             }
-        } else {
-            System.out.println(Arrays.toString(args));
-            if (args[0].equals("*")) {
-                var allPlayers = Bukkit.getServer().getOnlinePlayers();
-                String addr;
-                for (Player p : allPlayers) {
-                    addr = Objects.requireNonNull(p.getAddress()).getAddress().getHostAddress();
+            case "logging" -> {
+                if (args.length != 2 || !sender.hasPermission(PERMISSION_NODE_LOGGING)) {
+                    break;
+                }
+                if (args[1].equalsIgnoreCase("true")) {
+                    fileLogging = true;
+                    sender.sendMessage("Geolocation file logging has been enabled!");
+                } else if (args[1].equalsIgnoreCase("false")) {
+                    fileLogging = false;
+                    sender.sendMessage("Geolocation file logging has been disabled!");
+                } else {
+                    sender.sendMessage("Invalid argument. Usage: /geolookup logging [true|false]");
+                }
+                return true;
+            }
+            case "*" -> {
+                for (Player p : Bukkit.getServer().getOnlinePlayers()) {
+                    String addr = Objects.requireNonNull(p.getAddress()).getAddress().getHostAddress();
                     getIPInfo(addr, sender, p);
                 }
-            }
-
-            Player plr = Bukkit.getPlayer(args[0]);
-            if (plr != null && plr.getAddress() != null) {
-                String addr = plr.getAddress().getAddress().getHostAddress(); // Grab IP
-                getIPInfo(addr, sender, plr);
-            } else {
-                sender.sendMessage("Please enter a valid player name or option(s)");
-                return false;
+                return true;
             }
         }
-        return true;
+
+        Player plr = Bukkit.getPlayer(args[0]);
+        if (plr != null && plr.isOnline() && plr.getAddress() != null) {
+            String addr = plr.getAddress().getAddress().getHostAddress(); // Grab IP
+            getIPInfo(addr, sender, plr);
+            return true;
+        }
+
+        sender.sendMessage("Please enter a valid player name or option(s)");
+        return false;
     }
 
     /**
@@ -99,21 +123,47 @@ public class geolookup implements Listener, CommandExecutor {
             IPResponse response = ipInfo.lookupIP(addr);
             if (response.getCountryName() != null) {
                 String ipinfo = String.format("[%s]", plr.getName())
-                        + " has connected from: "
+                        + "[" + addr + "] "
+                        + "has connected from: "
                         + String.format("[%s] ", response.getCountryCode())
                         + response.getCountryName()
                         + "-"
                         + response.getRegion();
                 sender.sendMessage(ipinfo);
+                if(fileLogging) {
+                    logToFile(ipinfo);
+                }
             } else {
                 String ipinfo = String.format("[%s]", plr.getName())
                         + " has connected from: "
                         + String.format("[%s] ", response.getCountryCode())
                         + response.getRegion();
                 sender.sendMessage(ipinfo);
+                if(fileLogging) {
+                    logToFile(ipinfo);
+                }
             }
         } catch (RateLimitedException e) {
+            getLogger().warning("ipinfo.io rate limit has been reached!.. How did you use 50k requests in a month??");
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Takes a string value to write, and creates a logfile (if it doesn't exist already) called geolookup.log which it writes to.
+     * This method can be fairly inefficient if it is called many times in quick succession, as it has to re-create a new writer
+     * each time and re-open the file just to close it again.
+     * If performance issues are experienced, a more suitable logging library such as Log4J or SLF4J should be used for high frequency logging.
+     * @param connectionInfo The string you want to write to the log file.
+     */
+    private void logToFile(String connectionInfo) {
+        // LOGFILE
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter("geolookup.log"))) {
+            writer.write(connectionInfo);
+            writer.newLine();
+        } catch (IOException e) {
+            getLogger().warning("Failed to write to geolookup.log");
+            e.printStackTrace();
         }
     }
 
