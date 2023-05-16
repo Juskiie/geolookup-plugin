@@ -1,5 +1,6 @@
 package hoosk.MineFurs.Commands;
 
+import hoosk.MineFurs.Handlers.PlayerJoinHandler;
 import hoosk.MineFurs.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -25,15 +26,15 @@ import java.time.format.DateTimeFormatter;
 
 import static org.bukkit.Bukkit.getLogger;
 
-public class geolookup implements Listener, CommandExecutor {
-    private static final String PERMISSION_NODE_TOGGLE = "geolookup.active";
-    private static final String PERMISSION_NODE_USE = "geolookup.use";
-    private static final String PERMISSION_NODE_LOGGING = "geolookup.logger";
+public class GeoLookup implements Listener, CommandExecutor {
+    public static final String PERMISSION_NODE_TOGGLE = "geolookup.active";
+    public static final String PERMISSION_NODE_USE = "geolookup.use";
+    public static final String PERMISSION_NODE_LOGGING = "geolookup.logger";
     private boolean fileLogging;
-    private Set<UUID> playersWithGeoLookupEnabled = new HashSet<>();
+    public Set<UUID> playersWithGeoLookupEnabled = new HashSet<>();
 
-    public geolookup(Main plugin) {
-        Bukkit.getPluginManager().registerEvents(this, plugin);
+    public GeoLookup(Main plugin) {
+        Bukkit.getPluginManager().registerEvents(new PlayerJoinHandler(this), plugin);
     }
 
     /**
@@ -120,14 +121,19 @@ public class geolookup implements Listener, CommandExecutor {
      */
     public void getIPInfo(String addr, @NotNull CommandSender sender, @NotNull Player plr) {
         IPinfo ipInfo = new IPinfo.Builder()
-                .setToken("---PUT TOKEN HERE---")
+                .setToken("317b48f68b63d4")
                 .build();
         try {
             IPResponse response = ipInfo.lookupIP(addr);
-            String country = response.getCountryName() != null ? response.getCountryName() : response.getRegion();
+            /* Sometimes the API struggles to associate a country name to an address, but it is almost always
+             * able to assign a region name. As a failsafe, this code tries country name first and if that fails
+             * it falls back to using the region instead. (Still applies region in either case)
+             */
+            String country = response.getCountryName() != null ? response.getCountryName() + " [" + response.getRegion() + "]" : response.getRegion();
             String ipinfo = String.format(
-                    "[%s] %s has connected from: [%s] %s",
-                    LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME), // YYYY-MM-DD-Time
+                    "[%s]{%s} %s has connected from: [%s] %s",
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
+                    addr,
                     plr.getName(),
                     response.getCountryCode(),
                     country);
@@ -153,11 +159,12 @@ public class geolookup implements Listener, CommandExecutor {
         if(!logDir.exists()) {
             logDir.mkdir();
         }
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File(logDir, "geolookup.log"), true))) {
+        String logFileName = "GeoLookup-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) + ".log";
+        try(BufferedWriter writer = new BufferedWriter(new FileWriter(new File(logDir, logFileName), true))) {
             writer.write(connectionInfo);
             writer.newLine();
         } catch (IOException e) {
-            getLogger().warning("Failed to write to geolookup.log");
+            getLogger().warning("Failed to write to ./plugin logs/*");
             e.printStackTrace();
         }
     }

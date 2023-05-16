@@ -1,6 +1,6 @@
 package hoosk.MineFurs;
 
-import hoosk.MineFurs.Commands.geolookup;
+import hoosk.MineFurs.Commands.GeoLookup;
 
 // import java.net.URL;
 import java.util.Objects;
@@ -19,7 +19,7 @@ public final class Main extends JavaPlugin {
         Bukkit.getLogger().info("Starting up GeoLookup plugin (by Juskie)!");
 
         // Commands
-        Objects.requireNonNull(this.getCommand("geolookup")).setExecutor(new geolookup(this));
+        Objects.requireNonNull(this.getCommand("geolookup")).setExecutor(new GeoLookup(this));
     }
 
     @Override
