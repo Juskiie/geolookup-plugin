@@ -7,13 +7,11 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 import io.ipinfo.api.IPinfo;
 import io.ipinfo.api.errors.RateLimitedException;
 import io.ipinfo.api.model.IPResponse;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedWriter;
@@ -166,22 +164,6 @@ public class GeoLookup implements Listener, CommandExecutor {
         } catch (IOException e) {
             getLogger().warning("Failed to write to ./plugin logs/*");
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * When a player joins, check if logging is globally enabled.
-     * If enabled, players that have the permission and have logging enabled will start seeing player connection information.
-     * @param event Player connection
-     */
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"say Welcome back " + event.getPlayer().getName() + "!");
-        String addr = Objects.requireNonNull(event.getPlayer().getAddress()).getAddress().getHostAddress();
-        for(Player receiver : Bukkit.getOnlinePlayers()) {
-            if (receiver.hasPermission(PERMISSION_NODE_TOGGLE) && playersWithGeoLookupEnabled.contains(receiver.getUniqueId())) {
-                getIPInfo(addr, receiver, event.getPlayer());
-            }
         }
     }
 }
