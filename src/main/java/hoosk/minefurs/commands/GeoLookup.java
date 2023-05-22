@@ -1,7 +1,7 @@
-package hoosk.MineFurs.Commands;
+package hoosk.minefurs.commands;
 
-import hoosk.MineFurs.Handlers.PlayerJoinHandler;
-import hoosk.MineFurs.Main;
+import hoosk.minefurs.handlers.PlayerJoinHandler;
+import hoosk.minefurs.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;

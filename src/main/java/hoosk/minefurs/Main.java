@@ -1,6 +1,6 @@
-package hoosk.MineFurs;
+package hoosk.minefurs;
 
-import hoosk.MineFurs.Commands.GeoLookup;
+import hoosk.minefurs.commands.GeoLookup;
 
 // import java.net.URL;
 import java.util.Objects;

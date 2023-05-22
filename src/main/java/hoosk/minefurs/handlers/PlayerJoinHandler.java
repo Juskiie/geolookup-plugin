@@ -1,4 +1,4 @@
-package hoosk.MineFurs.Handlers;
+package hoosk.minefurs.handlers;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -8,7 +8,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.util.Objects;
 
-import hoosk.MineFurs.Commands.GeoLookup;
+import hoosk.minefurs.commands.GeoLookup;
 
 public class PlayerJoinHandler implements Listener {
     private final GeoLookup geoLookup;
