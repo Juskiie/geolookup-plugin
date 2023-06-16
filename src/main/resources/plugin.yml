@@ -1,7 +1,7 @@
 name: GeoLookup
 version: '${project.version}'
 main: hoosk.minefurs.Main
-api-version: "1.18"
+api-version: "1.20"
 commands:
   geolookup:
     description: Gets player connection information and region
