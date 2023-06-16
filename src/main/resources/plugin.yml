@@ -9,3 +9,8 @@ commands:
     aliases: /geo
     permission: geolookup
     permission-message: Sorry, you don't have permission to use this command.
+  geolookup-key:
+    description: Sets the API key
+    usage: /geolookup-key
+    permission: op
+    permission-message: You must be a server operator to execute this command.
