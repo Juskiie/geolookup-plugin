@@ -6,7 +6,7 @@
 
     <groupId>hoosk</groupId>
     <artifactId>GeoLookup</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.2</version>
     <packaging>jar</packaging>
 
     <name>geolookup</name>
@@ -40,7 +40,7 @@
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <outputFile>C:\Users\Casey\Desktop\dev\Personal Projects\MC\plugins\geolookup.jar</outputFile>
+                            <outputFile>C:\Users\Casey\Desktop\dev\Personal Projects\MC\plugins\geolookup-${project.version}.jar</outputFile>
                         </configuration>
                     </execution>
                 </executions>

@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 
@@ -13,6 +14,7 @@ import io.ipinfo.api.IPinfo;
 import io.ipinfo.api.errors.RateLimitedException;
 import io.ipinfo.api.model.IPResponse;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,14 +26,16 @@ import java.time.format.DateTimeFormatter;
 
 import static org.bukkit.Bukkit.getLogger;
 
-public class GeoLookup implements Listener, CommandExecutor {
+public class GeoLookup implements Listener, CommandExecutor, TabCompleter {
     public static final String PERMISSION_NODE_TOGGLE = "geolookup.active";
     public static final String PERMISSION_NODE_USE = "geolookup.use";
     public static final String PERMISSION_NODE_LOGGING = "geolookup.logger";
     private boolean fileLogging;
     public Set<UUID> playersWithGeoLookupEnabled = new HashSet<>();
+    private Main plugin;
 
     public GeoLookup(Main plugin) {
+        this.plugin = plugin;
         Bukkit.getPluginManager().registerEvents(new PlayerJoinHandler(this), plugin);
     }
 
@@ -55,6 +59,14 @@ public class GeoLookup implements Listener, CommandExecutor {
 
         // Check permissions
         if(!Objects.requireNonNull(player.getPlayer()).hasPermission(PERMISSION_NODE_USE)) {
+            sender.sendMessage("Sorry! You are lacking appropriate permissions to execute this command!");
+            return false;
+        }
+
+        // Make sure the API key has been set to avoid a null pointer exception
+        if(plugin.getAPIKey() == null) {
+            Bukkit.getLogger().warning("[GeoLookup] It looks like you haven't set an API key yet, or it failed to load correctly. Please check the config file, or use /geolookup-key <key>");
+            sender.sendMessage("[GeoLookup] It looks like you haven't set an API key yet, or it failed to load correctly. Please check the config file, or use /geolookup-key <key>");
             return false;
         }
 
@@ -63,6 +75,7 @@ public class GeoLookup implements Listener, CommandExecutor {
         switch (geoCommand) {
             case "active" -> {
                 if (args.length != 2 || !sender.hasPermission(PERMISSION_NODE_TOGGLE)) {
+                    sender.sendMessage("Sorry! You are lacking appropriate permissions to execute this command, or have executed it incorrectly!");
                     break;
                 }
                 if (args[1].equalsIgnoreCase("true")) {
@@ -78,6 +91,7 @@ public class GeoLookup implements Listener, CommandExecutor {
             }
             case "logging" -> {
                 if (args.length != 2 || !sender.hasPermission(PERMISSION_NODE_LOGGING)) {
+                    sender.sendMessage("Sorry! You are lacking appropriate permissions to execute this command, or have executed it incorrectly!");
                     break;
                 }
                 if (args[1].equalsIgnoreCase("true")) {
@@ -118,8 +132,17 @@ public class GeoLookup implements Listener, CommandExecutor {
      * @param plr - The target player
      */
     public void getIPInfo(String addr, @NotNull CommandSender sender, @NotNull Player plr) {
+        if(plugin.getAPIKey() == null) {
+            Bukkit.getLogger().warning("[GeoLookup] It looks like you haven't set an API key yet, or it failed to load correctly. Please check the config file, or use /geolookup-key <key>");
+            sender.sendMessage("[GeoLookup] It looks like you haven't set an API key yet, or it failed to load correctly. Please check the config file, or use /geolookup-key <key>");
+            return;
+        }
+
+        String apiKey = plugin.getAPIKey();
+
+
         IPinfo ipInfo = new IPinfo.Builder()
-                .setToken("317b48f68b63d4")
+                .setToken(apiKey)
                 .build();
         try {
             IPResponse response = ipInfo.lookupIP(addr);
@@ -129,12 +152,13 @@ public class GeoLookup implements Listener, CommandExecutor {
              */
             String country = response.getCountryName() != null ? response.getCountryName() + " [" + response.getRegion() + "]" : response.getRegion();
             String ipinfo = String.format(
-                    "[%s]{%s} %s has connected from: [%s] %s",
+                    "[GeoLookup] [%s] Player %s has connected from: [%s] %s with address {%s}",
                     LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")),
-                    addr,
                     plr.getName(),
                     response.getCountryCode(),
-                    country);
+                    country,
+                    addr
+            );
             sender.sendMessage(ipinfo);
             if(fileLogging) {
                 logToFile(ipinfo);
@@ -165,5 +189,32 @@ public class GeoLookup implements Listener, CommandExecutor {
             getLogger().warning("Failed to write to ./plugin logs/*");
             e.printStackTrace();
         }
+    }
+
+    /**
+     *
+     * @param sender The sender of the command
+     * @param command The command being called
+     * @param alias Command alias
+     * @param args The command arguments for tab completion
+     * @return The possible options for command auto-completion
+     */
+    @Nullable
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, Command command, @NotNull String alias, String[] args) {
+        if (command.getName().equalsIgnoreCase("geolookup")) {
+            if (args.length == 1) {
+                // Return the sub-commands for /geolookup
+                return Arrays.asList("*", "active", "logging");
+            } else if (args.length == 2) {
+                if (args[0].equalsIgnoreCase("active") || args[0].equalsIgnoreCase("logging")) {
+                    // Return true/false for /geolookup active and /geolookup logging
+                    return Arrays.asList("true", "false");
+                }
+            }
+        }
+
+        // If no completions are available, return an empty list
+        return Collections.emptyList();
     }
 }

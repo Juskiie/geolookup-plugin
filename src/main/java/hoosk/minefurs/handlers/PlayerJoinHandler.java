@@ -24,7 +24,6 @@ public class PlayerJoinHandler implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Bukkit.getServer().dispatchCommand(Bukkit.getServer().getConsoleSender(),"say Welcome back " + event.getPlayer().getName() + "!");
         String addr = Objects.requireNonNull(event.getPlayer().getAddress()).getAddress().getHostAddress();
         for(Player receiver : Bukkit.getOnlinePlayers()) {
             if (receiver.hasPermission(GeoLookup.PERMISSION_NODE_TOGGLE) && geoLookup.playersWithGeoLookupEnabled.contains(receiver.getUniqueId())) {
