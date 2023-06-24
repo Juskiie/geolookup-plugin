@@ -112,14 +112,24 @@ public class GeoLookup implements Listener, CommandExecutor, TabCompleter {
                 }
                 return true;
             }
+            default -> {
+                Player target = Bukkit.getPlayer(geoCommand);
+                if (target != null && target.isOnline() && target.getAddress() != null) {
+                    String addr = target.getAddress().getAddress().getHostAddress(); // Grab IP
+                    getIPInfo(addr, sender, target);
+                    return true;
+                }
+                sender.sendMessage("Please enter a valid player name or option(s)");
+                return false;
+            }
         }
 
-        Player plr = Bukkit.getPlayer(args[0]);
-        if (plr != null && plr.isOnline() && plr.getAddress() != null) {
-            String addr = plr.getAddress().getAddress().getHostAddress(); // Grab IP
-            getIPInfo(addr, sender, plr);
-            return true;
-        }
+//        Player plr = Bukkit.getPlayer(args[0]);
+//        if (plr != null && plr.isOnline() && plr.getAddress() != null) {
+//            String addr = plr.getAddress().getAddress().getHostAddress(); // Grab IP
+//            getIPInfo(addr, sender, plr);
+//            return true;
+//        }
 
         sender.sendMessage("Please enter a valid player name or option(s)");
         return false;
