@@ -6,7 +6,7 @@
 
     <groupId>hoosk</groupId>
     <artifactId>GeoLookup</artifactId>
-    <version>1.20</version>
+    <version>1.18</version>
     <packaging>jar</packaging>
 
     <name>geolookup</name>
