@@ -1,7 +1,7 @@
 package hoosk.minefurs.commands;
 
 import hoosk.minefurs.Main;
-import org.bukkit.Bukkit;
+// import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -9,6 +9,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Class for setting API key for ipinfo service.
+ */
 public class SetAPIKey implements Listener, CommandExecutor {
     private Main plugin;
 
@@ -18,7 +21,7 @@ public class SetAPIKey implements Listener, CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender commandSender, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
-        if (!(commandSender instanceof Player) || !((Player) commandSender).isOp()) {
+        if (!(commandSender instanceof Player) || !commandSender.isOp()) {
             commandSender.sendMessage("This command can only be run by an operator.");
             return true;
         }

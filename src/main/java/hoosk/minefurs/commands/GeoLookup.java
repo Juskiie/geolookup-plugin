@@ -70,12 +70,16 @@ public class GeoLookup implements Listener, CommandExecutor, TabCompleter {
             return false;
         }
 
+        if(args.length <1){
+            return false;
+        }
+
         String geoCommand = args[0].toLowerCase();
 
         switch (geoCommand) {
             case "active" -> {
                 if (args.length != 2 || !sender.hasPermission(PERMISSION_NODE_TOGGLE)) {
-                    sender.sendMessage("Sorry! You are lacking appropriate permissions to execute this command, or have executed it incorrectly!");
+                    sender.sendMessage("You either are lacking appropriate permissions to execute this command, or have executed it incorrectly!");
                     break;
                 }
                 if (args[1].equalsIgnoreCase("true")) {
@@ -91,7 +95,7 @@ public class GeoLookup implements Listener, CommandExecutor, TabCompleter {
             }
             case "logging" -> {
                 if (args.length != 2 || !sender.hasPermission(PERMISSION_NODE_LOGGING)) {
-                    sender.sendMessage("Sorry! You are lacking appropriate permissions to execute this command, or have executed it incorrectly!");
+                    sender.sendMessage("You either are lacking appropriate permissions to execute this command, or have executed it incorrectly!");
                     break;
                 }
                 if (args[1].equalsIgnoreCase("true")) {

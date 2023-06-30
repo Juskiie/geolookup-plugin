@@ -1,16 +1,38 @@
 name: GeoLookup
+author: Juskie
 version: '${project.version}'
 main: hoosk.minefurs.Main
 api-version: '${project.version}'
+
 commands:
   geolookup:
     description: Gets player connection information and region
-    usage: /geolookup
+    usage: |
+      /geolookup [*/Player/active/logging] {true/false}
+      Example: /geolookup [*/Player] - To perform a geoip lookup of a single target or the entire server
+      Example: /geolookup active true - To enable automatic usage of the command on player connections
+      Example: /geolookup logging false - To disable the logfile.
     aliases: /geo
-    permission: geolookup
     permission-message: Sorry, you don't have permission to use this command.
   geolookup-key:
     description: Sets the API key
     usage: /geolookup-key
     permission: op
     permission-message: You must be a server operator to execute this command.
+
+permissions:
+  geolookup.*:
+    description: Gives access to all available plugin commands, except the API key command, which is server operator only by design.
+    children:
+      geolookup.use: true
+      geolookup.active: true
+      geolookup.logging: true
+  geolookup.use:
+    description: Allows the base command for single-target geoip lookup.
+    default: op
+  geolookup.active:
+    description: Toggleable. Sets whether or not to automatically perform the base geolookup command on player connections.
+    default: op
+  geolookup.logging:
+    description: Enables the plugin log file. When active, player connections along with IP and geographic information will be automatically logged to the log file.
+    default: op
